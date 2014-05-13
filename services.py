@@ -3,53 +3,27 @@
 # P-uppgift
 # errands
 
-# Contains functions representing the 
-# various services a facility can provide
+# Contains functions representing 
+# services a facility can provide
 
-# If a facility can provide a service,
-# attach the service function to the facility instance
+import random
 
-# class Service:
-	# Template for services
-	# start_str = ""
-	# name_str = ""
-	# done_str = ""
+def robbed(facility):
+	if facility.attraction < 5:    facility.attraction += 0.5
+	elif facility.attraction > 8: facility.attraction -= 3
+	elif facility.attraction > 5: facility.attraction -= 1
+	else: facility.effects = []
 	
-	# def __init__(self, facility=None, time=1):
-		# self.facility = facility
-		# self.time = time
-	
-	# def start(self, facility):
-		# self.facility = facility
-	
-	# def tick(self):
-		# if self.time:
-			# self.time -= 1
-		# return self.time
-	
-	# def __func__(self):
-		# self.tick()
-	
-	
-# class Mail(Service):
-	# def __init__(self, facility, time=2):
-		# self.facility = facility
-		# self.time = time
-
-# class Robbery(Service):
-	# def __init__(self, facility, time=1):
-		# self.facility = facility
-		# self.time = time
-	
-	# def tick(self):
-		# facility.queue = []
-	
-# def mail(self):
-	# None
-	
-def robbery(facility, client):
-	facility.timer = 0
-	facility.queue = []
-	facility.current = None
-	facility.loger(client, 'robbery')
-	# print("Detta är ett rån!")
+def robbery(facility, client, state):
+	if state == 'add':
+		facility.timer = 0
+		facility.queue = []
+		facility.current = None
+		if not random.randint(0,4):
+			facility.loger(client, 'robberyl', "and manages to overpower Franco")
+			facility.attraction = 20
+		else:
+			facility.loger(client, 'robberyw', 'but is quickly tickled into submision by Franco')
+			facility.attraction = 2
+		facility.effects.append(robbed)
+		return False

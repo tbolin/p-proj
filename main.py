@@ -2,19 +2,41 @@
 
 # P-uppgift
 # main
-# Contains classes for representing the world, facilities and people
-
-# TODO
-# World, facility, and Person should probably 
-# be moved to a sepparate file together with support classes
 
 from random import randint
+from places import *
 import services
 
-def conv_time(start, time):
-	return "{0:02d}:{1:02d}".format(start+(time//60),time%60)
-
+		
+def parse_mail_log(log):
+	# Function that defines how a log should be parsed
+	things = [[i, conv_time(time), text, person.name, person.errands.get('mail',None), number] for (i, time, text, person, number) in log]
+	# 0	id
+	# 1	when
+ 	# 2 what
+	# 3 who
+	# 4 errands
+	# 5	how
+	events = {	"next":"{1} \t customer {3} leaves ",
+				"start":"and customer {3} with {4} letters is served.\n",
+				"done":"{1} \t customer {3} leaves and the queue is empty.\n",
+				"add":"{1} \t customer {3} with {4} letters enters ",
+				"startn":"and is immediately served. \n",
+				"addq":"{1} \t customer {3} enters and is put in queue in place {5}\n",
+				"robberyw":"{1} \t {3} enters enters, tries to rob the store, {5} \n",
+				"robberyl":"{1} \t {3} enters enters, tries to rob the store, {5} \n",
+				"open":"{1} \t {3} Opens the store \n",
+				"close":"{1} \t {3} Closes the store \n"
+			}
+	str = "".join(events.get(post[2], "").format(*post) for post in things)
+	if log.customers: 
+		misc = [log.customers, log.q_time, (log.q_time/log.customers)*60]
+		str += "\nSTATISTICS: {0} customers, queue time {1} minutes = {2:.1f} s/customer".format(*misc)
+	return str
+	
 def gen_errands():
+	# Defines which errands a newly generated person 
+	# should be given
 	errands = 1
 	if not randint(0,1000):
 		return {'robbery':1}
@@ -22,125 +44,17 @@ def gen_errands():
 	while flipp:
 		errands += 1
 		flipp = randint(0,1)
-	return {'mail':errands}
+	return {'mail':errands}	
 
-class Person():
-	__id = 0
-	def __init__(self, errands=[]):
-		if not errands: self.errands = gen_errands()
-		self.id = Person.__id
-		Person.__id += 1
-		
-	def attach(self, errand, number):
-		if callable(errand):
-			self.errands[errand.__name__] = number
-		
-class Log:
-	__id = 0
-	def __init__(self, world, facility):
-		self.id = Log.__id
-		Log.__id += 1
-		self.world = world
-		self.who = []
-		self.what = []
-		self.when = []
-	
-	def add(self, person, event):
-		self.who.append(person)
-		self.what.append(event)
-		self.when.append(self.world.time)
-	
-	def __call__(self, person, event):
-		self.add(person, event)
-	
-	def __iter__(self):
-		for (i, (time, text)) in enumerate(zip(self.when, self.what)): 
-			yield conv_time(0, time) + "\t" + text
-	
-	def __repr__(self):
-		return "\n".join([s for s in self])
-		
-		
-class Facility():
-	def __init__(self, world, queue=[], services=set(), p_time=2):
-		self.current = None
-		self.process = None
-		self.queue = queue
-		self.works = []
-		self.timer = 0
-		self.services = services
-		self.p_time = p_time
-		self.loger = Log(world, self)
-		world.attach(self)
-	
-	def add_client(self, client):
-		if self.services & client.errands.keys(): 
-			if self.current: 
-				self.loger(client, 'add'+str(len(self.queue)+1))
-				self.queue.append(client)
-			else: 
-				self.queue.append(client)
-				self.loger(client, 'add')
-	
-	def next(self):
-		if not self.queue: return False
-		client = self.queue.pop(0)
-		for k,v in client.errands.items():
-			if k in self.services:
-				func = getattr(services, k, None)
-				if callable(func):
-					func(self, client)
-					return False
-				self.timer += v*self.p_time
-		self.loger(client, 'start')
-		self.current = client
-		return True # True if a new batch was started
-		
-	def done(self):
-		self.loger(self.current, 'done')
-		self.current = None
-		
-	def step(self):
-		if not self.timer:
-			if self.current:
-				self.done()
-			if not self.next(): return
-		else:
-			self.timer -= 1
-
-class World:
-	def __init__(self, time=0):
-		self.time = time
-		self.places = []
-		self.people = []
-		
-	def attach(self, facility):
-		self.places.append(facility)
-		
-	def step(self):
-		for f in self.places:
-			f.step()
-		self.time += 1
-		
 def main():
 	open = 9
 	close = 18
-	# Open 9-18, 1 minute resolution => 
 	max_time = close*60
-	time = open*60
-	skrutt = World(time)
-	office = Facility(skrutt, services={'mail','robbery'})
-	
-	while skrutt.time <= max_time or office.current:
-		if skrutt.time <= max_time and not randint(0, 5): 
-			cli = Person()
-			office.add_client(cli)
-		skrutt.step()
-	print(office.loger)
-	
-	# print("Total wait time:", wait, "minutes")
-	# print("Number of customers:", Franco.counter)
-	# print("Average wait time:", round(wait/Franco.counter, 2))
+	start_time = open*60
+	skrutt = World(start_time, generator = gen_errands)	# This is the world instance
+	franco = Person("Franco") # Mrs. Franco
+	office = Facility(skrutt, services={'mail','robbery'}, parser=parse_mail_log, staff=franco, state=False) # The office
+	skrutt.run(max_time)
 if __name__ == '__main__': main()
 
 
