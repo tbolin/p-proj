@@ -5,3 +5,7 @@ någonstans här emellan: 5 timmar omskrivningar
 
 4/5 3 timmar
 Gjorde strukturerad som nästan fungerar
+
+13/5 4 timmar
+Satte in loopen i world-klassen.
+Allt borde fungera nu.

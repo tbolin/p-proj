@@ -1,6 +1,7 @@
 ﻿# -*- coding: UTF-8 -*-
 
-# P-uppgift
+# P-uppgift grupdat VT-2014
+# Tobias Bolin
 # Classes representing the world, facilities and people
 
 from random import randint
@@ -50,7 +51,8 @@ class World:
 		self.done()
 
 class Facility():
-	def __init__(self, world, queue=[], services=set(), parser=None, p_time=2, attraction=5, open=9, close=18, staff=None, state=True):
+	def __init__(self, world, queue=[], services = set(), 
+	parser = None, p_time=2, attraction=4, open=9, close=18, staff=None, state=True):
 		self.world = world
 		self.current = None
 		self.process = None
@@ -118,7 +120,7 @@ class Facility():
 		elif not self.state and self.world.time%(60*24) > self.open and self.close > self.world.time%(60*24):
 			self.state = True
 			self.loger(self.staff, "open")
-		# apply any effects to the facility
+		# apply any effects affecting the facility
 		for effect in self.effects:
 			effect(self)
 		# Check if default task is running
@@ -144,6 +146,7 @@ class Person():
 			self.errands[errand.__name__] = number
 		
 class Log:
+	"""Log class"""
 	__id = 0
 	def __init__(self, world, facility, parser=None, **kwargs):
 		self.id = Log.__id
@@ -163,8 +166,11 @@ class Log:
 		self.when.append(self.world.time)
 		self.how.append(how)
 	
-	def parsed(self):
-		if self.parser:
+	def parsed(self, parser=None):
+		# Used to print with a custom parsing function
+		if parser:
+			return parser(self)
+		elif self.parser:
 			return self.parser(self)
 		else:
 			return self.__repr__()
@@ -181,5 +187,5 @@ class Log:
 		return "\n".join(things)
 
 def conv_time(time, start=0):
-	"""Converts time in minutes """
+	"""Converts time in minutes to hh:mm"""
 	return "{0:02d}:{1:02d}".format(start+(time//60),time%60)

@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 
-# P-uppgift
+# P-uppgift grupdat VT-2014
+# Tobias Bolin
 # main
 
 from random import randint
@@ -38,7 +39,7 @@ def gen_errands():
 	# Defines which errands a newly generated person 
 	# should be given
 	errands = 1
-	if not randint(0,1000):
+	if not randint(0,999):
 		return {'robbery':1}
 	flipp = randint(0,1)
 	while flipp:
@@ -53,7 +54,10 @@ def main():
 	start_time = open*60
 	skrutt = World(start_time, generator = gen_errands)	# This is the world instance
 	franco = Person("Franco") # Mrs. Franco
-	office = Facility(skrutt, services={'mail','robbery'}, parser=parse_mail_log, staff=franco, state=False) # The office
+	office = Facility(skrutt, services={'mail','robbery'}, 
+	parser=parse_mail_log,
+	p_time=2, attraction=4,
+	staff=franco, state=False) # The office
 	skrutt.run(max_time)
 if __name__ == '__main__': main()
 
